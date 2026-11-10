@@ -975,3 +975,7 @@ body.cart-open { overflow: hidden; }
 @media (max-width: 899px) {
   .cart-fab { bottom: 1.1rem; right: 0.85rem; }
 }
+
+/* Heritage hero image (replaces big logo) */
+.hero-art-wrap.hero-heritage { background: linear-gradient(180deg, rgba(253,237,213,0) 55%, rgba(253,237,213,.95) 100%), url('assets/hero-heritage.jpg') center/cover no-repeat; min-height: clamp(320px, 62vh, 640px); padding: 0; }
+@media (max-width: 700px) { .hero-art-wrap.hero-heritage { min-height: 300px; background-position: 30% center; } }
