@@ -679,7 +679,7 @@ h3 { font-size: 1.25rem; margin: 0 0 0.25em; }
 .choices-grid { display:grid; grid-template-columns: 1fr 1fr; gap: clamp(1rem,3vw,2rem); }
 .choice-card { display:flex; flex-direction:column; justify-content:flex-end; gap:.4rem; min-height: 300px; padding: 2rem; border-radius: 28px; text-decoration:none; color:#fffaf3; position:relative; overflow:hidden; box-shadow: 0 18px 40px rgba(15,61,26,.18); transition: transform .35s ease, box-shadow .35s ease; }
 .choice-card:hover { transform: translateY(-6px); box-shadow: 0 26px 50px rgba(15,61,26,.26); }
-.choice-food { background: linear-gradient(160deg, rgba(15,61,26,.35), rgba(15,61,26,.92)), url('assets/products/argan-culinaire.jpg') center/cover; }
+.choice-food { background: linear-gradient(160deg, rgba(15,61,26,.35), rgba(15,61,26,.92)), url('assets/products/argan-culinaire.jpg?v=1794330537') center/cover; }
 .choice-cos { background: linear-gradient(160deg, #d89d67 0%, #c8401c 100%); }
 .choice-ar { font-size: 1.4rem; font-weight:700; color:#f9dac1; }
 .choice-title { font-family: 'Playfair Display', serif; font-size: clamp(2rem,4vw,2.8rem); line-height:1.05; }
@@ -977,5 +977,5 @@ body.cart-open { overflow: hidden; }
 }
 
 /* Heritage hero image (replaces big logo) */
-.hero-art-wrap.hero-heritage { background: linear-gradient(180deg, rgba(253,237,213,0) 55%, rgba(253,237,213,.95) 100%), url('assets/hero-heritage-v2.jpg') center/cover no-repeat; min-height: clamp(320px, 62vh, 640px); padding: 0; }
+.hero-art-wrap.hero-heritage { background: linear-gradient(180deg, rgba(253,237,213,0) 55%, rgba(253,237,213,.95) 100%), url('assets/hero-heritage-v2.jpg?v=1794330537') center/cover no-repeat; min-height: clamp(320px, 62vh, 640px); padding: 0; }
 @media (max-width: 700px) { .hero-art-wrap.hero-heritage { min-height: 300px; background-position: 30% center; } }
