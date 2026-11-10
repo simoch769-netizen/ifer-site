@@ -101,33 +101,103 @@ const FREE_DELIVERY_FROM = 300;
     return String(n) + " DH";
   }
 
+  function isValidPhone(raw) {
+    const s = String(raw || "").trim().replace(/[\s.\-()]/g, "");
+    if (/^0[567]\d{8}$/.test(s)) return true;
+    if (/^\+?212[567]\d{8}$/.test(s)) return true;
+    if (/^00212[567]\d{8}$/.test(s)) return true;
+    return false;
+  }
+
+  function readCustomer(form) {
+    const fd = new FormData(form);
+    return {
+      name: String(fd.get("name") || "").trim(),
+      phone: String(fd.get("phone") || "").trim(),
+      city: String(fd.get("city") || "").trim(),
+      address: String(fd.get("address") || "").trim(),
+      notes: String(fd.get("notes") || "").trim()
+    };
+  }
+
+  function validateCustomer(customer, errorEl, phoneInput) {
+    if (!customer.name || !customer.phone || !customer.city || !customer.address) {
+      errorEl.hidden = false;
+      errorEl.textContent = "المرجو تعمير الاسم، الهاتف، المدينة والعنوان.";
+      return false;
+    }
+    if (!isValidPhone(customer.phone)) {
+      errorEl.hidden = false;
+      errorEl.textContent = "رقم الهاتف غير صحيح. استعمل 06/07/05 أو +212.";
+      if (phoneInput) phoneInput.focus();
+      return false;
+    }
+    errorEl.hidden = true;
+    return true;
+  }
+
+  function productFromCard(card) {
+    return {
+      id: card.dataset.id,
+      name: card.dataset.name,
+      nameAr: card.dataset.nameAr,
+      price: Number(card.dataset.price),
+      size: card.dataset.size,
+      img: card.dataset.img
+    };
+  }
+
+  function productImgSrc(img) {
+    return String(img || "").replace(/\.webp(?=($|\?))/i, ".jpg");
+  }
+
+  function sendWhatsAppOrder(items, customer) {
+    const message = buildOrderMessage(items, customer);
+    window.__IFER_LAST_ORDER__ = message;
+    if (WHATSAPP_NUMBER) {
+      const url = "https://wa.me/" + WHATSAPP_NUMBER + "?text=" + encodeURIComponent(message);
+      window.location.href = url;
+    } else {
+      showOrderModal(message);
+    }
+  }
+
   const ui = injectCartUI();
+  const buy = injectBuyNowUI();
   let cart = loadCart();
   renderCart();
 
-  document.querySelectorAll("[data-id] .btn-add").forEach((btn) => {
-    btn.addEventListener("click", () => {
-      const card = btn.closest("[data-id]");
-      if (!card) return;
-      const qtyInput = card.querySelector(".qty-input");
-      const qty = Math.max(1, Math.min(20, parseInt(qtyInput && qtyInput.value, 10) || 1));
-      addItem({
-        id: card.dataset.id,
-        name: card.dataset.name,
-        nameAr: card.dataset.nameAr,
-        price: Number(card.dataset.price),
-        size: card.dataset.size,
-        img: card.dataset.img,
-        qty: qty
+  let buyNowItem = null;
+  let buyNowQty = 1;
+  let buyNowTrigger = null;
+
+  document.querySelectorAll("[data-id]").forEach((card) => {
+    const openFrom = (el) => {
+      openBuyNow(productFromCard(card), el);
+    };
+    card.querySelectorAll(".feature-visual, .product-photo, h3, .ar-name, .btn-buy").forEach((el) => {
+      el.addEventListener("click", (e) => {
+        e.preventDefault();
+        openFrom(el);
       });
-      btn.classList.add("is-added");
-      const prev = btn.textContent;
-      btn.textContent = "تمت الإضافة / Ajouté";
-      setTimeout(() => {
-        btn.classList.remove("is-added");
-        btn.textContent = prev;
-      }, 1200);
     });
+    const plus = card.querySelector(".btn-plus");
+    if (plus) {
+      plus.addEventListener("click", (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        const item = productFromCard(card);
+        item.qty = 1;
+        addItem(item);
+        plus.classList.add("is-added");
+        const prev = plus.textContent;
+        plus.textContent = "✓";
+        setTimeout(() => {
+          plus.classList.remove("is-added");
+          plus.textContent = prev || "+";
+        }, 1200);
+      });
+    }
   });
 
   function addItem(item) {
@@ -159,6 +229,7 @@ const FREE_DELIVERY_FROM = 300;
   }
 
   function openCart() {
+    if (document.body.classList.contains("buynow-open")) closeBuyNow();
     ui.drawer.classList.add("is-open");
     ui.overlay.classList.add("is-open");
     ui.fab.setAttribute("aria-expanded", "true");
@@ -174,40 +245,126 @@ const FREE_DELIVERY_FROM = 300;
     closeModal();
   }
 
+  function openBuyNow(item, trigger) {
+    if (!item || !item.id) return;
+    closeCart();
+    buyNowItem = item;
+    buyNowQty = 1;
+    buyNowTrigger = trigger || document.activeElement;
+    buy.form.reset();
+    buy.formError.hidden = true;
+    renderBuyNow();
+    buy.overlay.hidden = false;
+    buy.dialog.hidden = false;
+    document.body.classList.add("buynow-open");
+    requestAnimationFrame(() => {
+      buy.overlay.classList.add("is-open");
+      buy.dialog.classList.add("is-open");
+      const focusEl = buy.nameInput || buy.closeBtn;
+      if (focusEl) focusEl.focus();
+    });
+  }
+
+  function closeBuyNow() {
+    buy.overlay.classList.remove("is-open");
+    buy.dialog.classList.remove("is-open");
+    document.body.classList.remove("buynow-open");
+    buy.overlay.hidden = true;
+    buy.dialog.hidden = true;
+    buyNowItem = null;
+    buyNowQty = 1;
+    const trigger = buyNowTrigger;
+    buyNowTrigger = null;
+    if (trigger && typeof trigger.focus === "function") {
+      try { trigger.focus(); } catch (e) { /* ignore */ }
+    }
+  }
+
+  function renderBuyNow() {
+    if (!buyNowItem) return;
+    const img = productImgSrc(buyNowItem.img);
+    buy.img.src = img;
+    buy.img.alt = buyNowItem.name || "";
+    buy.name.textContent = buyNowItem.name || "";
+    buy.nameAr.textContent = buyNowItem.nameAr || "";
+    buy.size.textContent = buyNowItem.size || "";
+    buy.unit.textContent = money(buyNowItem.price);
+    buy.qty.textContent = String(buyNowQty);
+    const items = [{ ...buyNowItem, qty: buyNowQty }];
+    const sum = subtotal(items);
+    const ship = deliveryFor(sum);
+    const total = sum + ship;
+    buy.subtotal.textContent = money(sum);
+    buy.shipping.textContent = ship === 0 && sum > 0 ? "Offerte / مجاناً" : money(ship);
+    buy.total.textContent = money(total);
+  }
+
+  function focusables(root) {
+    return Array.prototype.slice.call(
+      root.querySelectorAll(
+        'a[href], button:not([disabled]), input:not([disabled]):not([type="hidden"]), textarea:not([disabled]), select:not([disabled]), [tabindex]:not([tabindex="-1"])'
+      )
+    ).filter((el) => !el.hidden && el.offsetParent !== null);
+  }
+
   ui.fab.addEventListener("click", () => {
     if (ui.drawer.classList.contains("is-open")) closeCart();
     else openCart();
   });
   ui.overlay.addEventListener("click", closeCart);
   ui.closeBtn.addEventListener("click", closeCart);
+
+  buy.overlay.addEventListener("click", closeBuyNow);
+  buy.closeBtn.addEventListener("click", closeBuyNow);
+  buy.dec.addEventListener("click", () => {
+    buyNowQty = Math.max(1, buyNowQty - 1);
+    renderBuyNow();
+  });
+  buy.inc.addEventListener("click", () => {
+    buyNowQty = Math.min(20, buyNowQty + 1);
+    renderBuyNow();
+  });
+  buy.form.addEventListener("submit", (e) => {
+    e.preventDefault();
+    if (!buyNowItem) return;
+    const customer = readCustomer(buy.form);
+    if (!validateCustomer(customer, buy.formError, buy.phoneInput)) return;
+    sendWhatsAppOrder([{ ...buyNowItem, qty: buyNowQty }], customer);
+  });
+
   document.addEventListener("keydown", (e) => {
-    if (e.key === "Escape") closeCart();
+    if (e.key === "Escape") {
+      if (document.body.classList.contains("buynow-open")) {
+        e.preventDefault();
+        closeBuyNow();
+        return;
+      }
+      if (ui.drawer.classList.contains("is-open") || (ui.modal && !ui.modal.hidden)) {
+        closeCart();
+      }
+      return;
+    }
+    if (e.key === "Tab" && document.body.classList.contains("buynow-open")) {
+      const nodes = focusables(buy.dialog);
+      if (!nodes.length) return;
+      const first = nodes[0];
+      const last = nodes[nodes.length - 1];
+      if (e.shiftKey && document.activeElement === first) {
+        e.preventDefault();
+        last.focus();
+      } else if (!e.shiftKey && document.activeElement === last) {
+        e.preventDefault();
+        first.focus();
+      }
+    }
   });
 
   ui.checkout.addEventListener("submit", (e) => {
     e.preventDefault();
     if (!cart.length) return;
-    const fd = new FormData(ui.checkout);
-    const customer = {
-      name: String(fd.get("name") || "").trim(),
-      phone: String(fd.get("phone") || "").trim(),
-      city: String(fd.get("city") || "").trim(),
-      address: String(fd.get("address") || "").trim(),
-      notes: String(fd.get("notes") || "").trim()
-    };
-    if (!customer.name || !customer.phone || !customer.city || !customer.address) {
-      ui.formError.hidden = false;
-      return;
-    }
-    ui.formError.hidden = true;
-    const message = buildOrderMessage(cart, customer);
-    window.__IFER_LAST_ORDER__ = message;
-    if (WHATSAPP_NUMBER) {
-      const url = "https://wa.me/" + WHATSAPP_NUMBER + "?text=" + encodeURIComponent(message);
-      window.location.href = url;
-    } else {
-      showOrderModal(message);
-    }
+    const customer = readCustomer(ui.checkout);
+    if (!validateCustomer(customer, ui.formError, ui.checkout.querySelector('[name="phone"]'))) return;
+    sendWhatsAppOrder(cart, customer);
   });
 
   ui.copyBtn.addEventListener("click", async () => {
@@ -245,7 +402,7 @@ const FREE_DELIVERY_FROM = 300;
         const line = (Number(it.price) || 0) * (Number(it.qty) || 0);
         return (
           '<li class="cart-item" data-cart-id="' + escapeHtml(it.id) + '">' +
-            '<img src="' + escapeHtml((it.img || "").replace(/\.webp$/i, ".jpg")) + '" alt="">' +
+            '<img src="' + escapeHtml(productImgSrc(it.img || "")) + '" alt="">' +
             '<div class="cart-item-info">' +
               '<p class="cart-item-name">' + escapeHtml(it.name) + '</p>' +
               '<p class="cart-item-meta"><span lang="ar" dir="rtl">' + escapeHtml(it.nameAr || "") + '</span> · <span dir="ltr">' + escapeHtml(it.size || "") + " · " + money(it.price) + "</span></p>" +
@@ -413,6 +570,88 @@ const FREE_DELIVERY_FROM = 300;
       modalBody: wrap.querySelector(".order-modal-body"),
       copyBtn: wrap.querySelector(".js-copy"),
       modalClose: wrap.querySelector(".js-modal-close")
+    };
+  }
+
+  function injectBuyNowUI() {
+    const wrap = document.createElement("div");
+    wrap.innerHTML = `
+      <div class="buynow-overlay" id="buynow-overlay" hidden></div>
+      <div class="buynow-dialog" id="buynow-dialog" role="dialog" aria-modal="true" aria-labelledby="buynow-title" tabindex="-1" hidden>
+        <header class="buynow-head">
+          <h2 id="buynow-title">اشري دابا <span>Commander</span></h2>
+          <button type="button" class="cart-close buynow-close" aria-label="Fermer">&times;</button>
+        </header>
+        <div class="buynow-product">
+          <img class="js-bn-img" src="" alt="">
+          <div>
+            <p class="buynow-name js-bn-name"></p>
+            <p class="buynow-meta"><span class="js-bn-name-ar" lang="ar" dir="rtl"></span> · <span class="js-bn-size" dir="ltr"></span></p>
+            <p class="buynow-unit">الثمن / Prix : <strong class="js-bn-unit"></strong></p>
+          </div>
+        </div>
+        <div class="buynow-qty" role="group" aria-label="Quantité">
+          <span>كمية / Qté</span>
+          <button type="button" class="qty-btn js-bn-dec" aria-label="Moins">−</button>
+          <span class="cart-qty js-bn-qty" aria-live="polite">1</span>
+          <button type="button" class="qty-btn js-bn-inc" aria-label="Plus">+</button>
+        </div>
+        <div class="cart-totals buynow-totals">
+          <p><span>المجموع الجزئي / Sous-total</span> <strong class="js-bn-subtotal">0 DH</strong></p>
+          <p><span>التوصيل / Livraison</span> <strong class="js-bn-shipping">30 DH</strong></p>
+          <p class="cart-free-hint">Livraison 30 DH · offerte dès 300 DH</p>
+          <p class="cart-total"><span>المجموع / Total</span> <strong class="js-bn-total">0 DH</strong></p>
+        </div>
+        <form class="checkout-form" id="buynow-form">
+          <h3>إتمام الطلب / Commander</h3>
+          <p class="pay-note">الدفع عند الاستلام · Cash on delivery</p>
+          <div class="field">
+            <label for="bn-name">Nom complet <span lang="ar">الاسم الكامل</span></label>
+            <input id="bn-name" name="name" type="text" autocomplete="name" required>
+          </div>
+          <div class="field">
+            <label for="bn-phone">Téléphone <span lang="ar">الهاتف</span></label>
+            <input id="bn-phone" name="phone" type="tel" inputmode="tel" autocomplete="tel" required>
+          </div>
+          <div class="field">
+            <label for="bn-city">Ville <span lang="ar">المدينة</span></label>
+            <input id="bn-city" name="city" type="text" autocomplete="address-level2" required>
+          </div>
+          <div class="field">
+            <label for="bn-address">Adresse <span lang="ar">العنوان</span></label>
+            <textarea id="bn-address" name="address" rows="2" autocomplete="street-address" required></textarea>
+          </div>
+          <div class="field">
+            <label for="bn-notes">Notes <span lang="ar">ملاحظات</span></label>
+            <textarea id="bn-notes" name="notes" rows="2" placeholder="اختياري"></textarea>
+          </div>
+          <p class="form-error" hidden>المرجو تعمير الاسم، الهاتف، المدينة والعنوان.</p>
+          <button type="submit" class="btn btn-green btn-block">إرسال عبر واتساب / Commander sur WhatsApp</button>
+        </form>
+      </div>
+    `;
+    document.body.appendChild(wrap);
+    const dialog = wrap.querySelector("#buynow-dialog");
+    const formEl = wrap.querySelector("#buynow-form");
+    return {
+      overlay: wrap.querySelector("#buynow-overlay"),
+      dialog: dialog,
+      closeBtn: wrap.querySelector(".buynow-close"),
+      img: wrap.querySelector(".js-bn-img"),
+      name: wrap.querySelector(".js-bn-name"),
+      nameAr: wrap.querySelector(".js-bn-name-ar"),
+      size: wrap.querySelector(".js-bn-size"),
+      unit: wrap.querySelector(".js-bn-unit"),
+      qty: wrap.querySelector(".js-bn-qty"),
+      dec: wrap.querySelector(".js-bn-dec"),
+      inc: wrap.querySelector(".js-bn-inc"),
+      subtotal: wrap.querySelector(".js-bn-subtotal"),
+      shipping: wrap.querySelector(".js-bn-shipping"),
+      total: wrap.querySelector(".js-bn-total"),
+      form: formEl,
+      formError: formEl.querySelector(".form-error"),
+      nameInput: wrap.querySelector("#bn-name"),
+      phoneInput: wrap.querySelector("#bn-phone")
     };
   }
 })();
