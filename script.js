@@ -1,6 +1,6 @@
 /* === IFER config === */
 /* WhatsApp number in wa.me format: country code + number, no + and no spaces. */
-const WHATSAPP_NUMBER = "212680759912";
+const WHATSAPP_NUMBER = "212708450087";
 
 const CART_KEY = "ifer-cart";
 const DELIVERY_FEE = 30;
