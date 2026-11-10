@@ -18,7 +18,7 @@
   --gold-light: #f1c699;
   --gold-dark: #d89d67;
   --amber: #b67943;
-  --amber-dark: #9e5e22;
+  --amber-dark: #95581f;
   --amber-light: #d2975a;
   --pink-pill: #f9dac1;
   --backdrop: #c4986f;
@@ -168,6 +168,21 @@ h3 { font-size: 1.25rem; margin: 0 0 0.25em; }
 }
 .btn:hover { transform: translateY(-2px); }
 .btn:focus-visible { outline: 2px solid var(--orange); outline-offset: 3px; }
+
+.nav-toggle:focus-visible,
+.cart-fab:focus-visible,
+.cart-close:focus-visible,
+.qty-btn:focus-visible,
+.social-btn:focus-visible,
+.back-link:focus-visible,
+.choice-card:focus-visible,
+.site-footer a:focus-visible,
+.cart-remove:focus-visible,
+.site-nav a:focus-visible {
+  outline: 2px solid var(--orange);
+  outline-offset: 3px;
+}
+
 .btn-green {
   background: var(--green-dark);
   color: var(--cream);
@@ -278,8 +293,10 @@ h3 { font-size: 1.25rem; margin: 0 0 0.25em; }
   background: var(--green-dark);
   color: var(--cream) !important;
   border-radius: 999px;
-  padding: 0.45rem 1rem !important;
+  padding: 0.55rem 1.05rem !important;
   margin-left: 0.3rem;
+  min-height: 40px;
+  justify-content: center;
 }
 .nav-cta::after { display: none; }
 .nav-cta:hover { background: var(--green-wordmark); }
@@ -514,6 +531,7 @@ h3 { font-size: 1.25rem; margin: 0 0 0.25em; }
 .social-btn {
   display: inline-flex;
   align-items: center;
+  flex-wrap: wrap;
   gap: 0.7rem;
   text-decoration: none;
   background: var(--paper);
@@ -521,6 +539,7 @@ h3 { font-size: 1.25rem; margin: 0 0 0.25em; }
   padding: 0.8rem 1.1rem;
   border-radius: 999px;
   font-weight: 500;
+  max-width: 100%;
   transition: transform 0.3s var(--ease), box-shadow 0.3s var(--ease);
 }
 .social-btn:hover { transform: translateY(-2px); box-shadow: var(--shadow); }
@@ -589,7 +608,7 @@ h3 { font-size: 1.25rem; margin: 0 0 0.25em; }
 }
 .footer-inner { display: grid; gap: 1.1rem; justify-items: center; }
 .site-footer nav { display: flex; flex-wrap: wrap; gap: 0.7rem 1.2rem; justify-content: center; }
-.site-footer nav a { text-decoration: none; font-size: 0.9rem; color: var(--cream); }
+.site-footer nav a { text-decoration: none; font-size: 0.9rem; color: var(--cream); display: inline-flex; align-items: center; min-height: 44px; padding: 0.35rem 0.45rem; }
 .site-footer nav a:hover { color: var(--gold-light); }
 .footer-tag {
   margin: 0;
@@ -658,7 +677,7 @@ h3 { font-size: 1.25rem; margin: 0 0 0.25em; }
   }
   .site-nav ul { flex-direction: column; align-items: stretch; gap: 0; }
   .site-nav a { align-items: flex-start; padding: 0.85rem 0.2rem; font-size: 1.05rem; }
-  .nav-cta { margin: 0.4rem 0 0; align-items: center !important; text-align: center; }
+  .nav-cta { margin: 0.4rem 0 0; align-items: center !important; text-align: center; min-height: 44px; padding: 0.7rem 1rem !important; }
   body.nav-open { overflow: hidden; }
 }
 
@@ -682,6 +701,7 @@ h3 { font-size: 1.25rem; margin: 0 0 0.25em; }
 .choice-card:hover { transform: translateY(-6px); box-shadow: 0 26px 50px rgba(15,61,26,.26); }
 .choice-food { background: linear-gradient(160deg, rgba(15,61,26,.35), rgba(15,61,26,.92)), url('assets/products/argan-culinaire.jpg?v=1794330537') center/cover; }
 .choice-cos { background: linear-gradient(160deg, #d89d67 0%, #c8401c 100%); }
+.choice-ar, .choice-title, .choice-sub { text-shadow: 0 1px 10px rgba(15,61,26,.4); }
 .choice-ar { font-size: 1.4rem; font-weight:700; color:#f9dac1; }
 .choice-title { font-family: 'Playfair Display', serif; font-size: clamp(2rem,4vw,2.8rem); line-height:1.05; }
 .choice-sub { opacity:.92; }
@@ -831,6 +851,7 @@ h3 { font-size: 1.25rem; margin: 0 0 0.25em; }
   border: 2px solid var(--green-dark);
 }
 .cart-fab.has-items .cart-badge { border-color: var(--orange); }
+.cart-badge[hidden] { display: none !important; }
 .cart-overlay {
   position: fixed;
   inset: 0;
@@ -851,13 +872,18 @@ h3 { font-size: 1.25rem; margin: 0 0 0.25em; }
   background: var(--cream);
   box-shadow: -12px 0 40px rgba(15, 61, 26, 0.18);
   transform: translateX(110%);
-  transition: transform 0.4s var(--ease);
+  visibility: hidden;
+  transition: transform 0.4s var(--ease), visibility 0s linear 0.4s;
   display: flex;
   flex-direction: column;
   overflow: auto;
   -webkit-overflow-scrolling: touch;
 }
-.cart-drawer.is-open { transform: none; }
+.cart-drawer.is-open {
+  transform: none;
+  visibility: visible;
+  transition: transform 0.4s var(--ease), visibility 0s;
+}
 .cart-head {
   display: flex;
   align-items: center;
@@ -883,8 +909,8 @@ h3 { font-size: 1.25rem; margin: 0 0 0.25em; }
   color: var(--amber-dark);
 }
 .cart-close {
-  width: 40px;
-  height: 40px;
+  width: 44px;
+  height: 44px;
   border: 0;
   background: transparent;
   font-size: 1.8rem;
@@ -909,9 +935,9 @@ h3 { font-size: 1.25rem; margin: 0 0 0.25em; }
 .cart-item-meta { margin: 0.15rem 0 0.4rem; font-size: 0.75rem; color: var(--amber-dark); font-family: var(--font-ar); }
 .cart-item-row { display: flex; align-items: center; gap: 0.35rem; flex-wrap: wrap; }
 .qty-btn {
-  width: 28px;
-  height: 28px;
-  border-radius: 8px;
+  width: 44px;
+  height: 44px;
+  border-radius: 10px;
   border: 1px solid rgba(15, 61, 26, 0.2);
   background: var(--cream-warm);
   cursor: pointer;
@@ -923,10 +949,13 @@ h3 { font-size: 1.25rem; margin: 0 0 0.25em; }
   border: 0;
   background: transparent;
   color: var(--orange);
-  font-size: 0.75rem;
+  font-size: 0.8rem;
   cursor: pointer;
   font-family: var(--font-ar);
   margin-left: auto;
+  min-height: 44px;
+  min-width: 44px;
+  padding: 0.25rem 0.4rem;
 }
 .cart-line { font-weight: 700; font-size: 0.85rem; margin-left: auto; }
 .cart-totals {
@@ -1087,7 +1116,7 @@ body.buynow-open .cart-fab { visibility: hidden; pointer-events: none; }
   font-weight: 600;
   color: var(--amber-dark);
 }
-.buynow-qty .qty-btn { width: 36px; height: 36px; font-size: 1.1rem; }
+.buynow-qty .qty-btn { width: 44px; height: 44px; font-size: 1.1rem; }
 .buynow-qty .cart-qty { min-width: 1.6rem; font-size: 1.05rem; color: var(--green-dark); }
 .buynow-totals { margin: 0 1.1rem 0.4rem; border-radius: 16px; border: 1px solid var(--line); }
 #buynow-form { padding-top: 0.4rem; }

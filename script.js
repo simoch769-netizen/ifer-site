@@ -46,12 +46,32 @@ const FREE_DELIVERY_FROM = 300;
   }
 
   if (form) {
+    const contactError = document.querySelector("#contact-error");
+    const isValidEmail = (value) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
     form.addEventListener("submit", (e) => {
       e.preventDefault();
       const fd = new FormData(form);
       const nom = String(fd.get("nom") || "").trim();
       const email = String(fd.get("email") || "").trim();
       const msg = String(fd.get("message") || "").trim();
+      if (!nom || !msg) {
+        if (contactError) {
+          contactError.hidden = false;
+          contactError.textContent = "المرجو تعمير الاسم والرسالة. Merci de renseigner votre nom et votre message.";
+        }
+        (form.querySelector(!nom ? "#nom" : "#message") || form).focus();
+        return;
+      }
+      if (email && !isValidEmail(email)) {
+        if (contactError) {
+          contactError.hidden = false;
+          contactError.textContent = "البريد الإلكتروني غير صحيح. L’adresse email n’est pas valide.";
+        }
+        const emailInput = form.querySelector("#email");
+        if (emailInput) emailInput.focus();
+        return;
+      }
+      if (contactError) contactError.hidden = true;
       const text = "Salam IFER 👋\n" + (nom ? "Nom: " + nom + "\n" : "") + (email ? "Email: " + email + "\n" : "") + (msg ? "\n" + msg : "");
       window.location.href = "https://wa.me/" + WHATSAPP_NUMBER + "?text=" + encodeURIComponent(text);
     });
@@ -164,6 +184,8 @@ const FREE_DELIVERY_FROM = 300;
 
   const ui = injectCartUI();
   const buy = injectBuyNowUI();
+  ui.drawer.setAttribute("inert", "");
+  ui.drawer.setAttribute("aria-hidden", "true");
   let cart = loadCart();
   renderCart();
 
@@ -233,6 +255,8 @@ const FREE_DELIVERY_FROM = 300;
     ui.drawer.classList.add("is-open");
     ui.overlay.classList.add("is-open");
     ui.fab.setAttribute("aria-expanded", "true");
+    ui.drawer.removeAttribute("inert");
+    ui.drawer.setAttribute("aria-hidden", "false");
     document.body.classList.add("cart-open");
     ui.drawer.focus();
   }
@@ -241,6 +265,8 @@ const FREE_DELIVERY_FROM = 300;
     ui.drawer.classList.remove("is-open");
     ui.overlay.classList.remove("is-open");
     ui.fab.setAttribute("aria-expanded", "false");
+    ui.drawer.setAttribute("inert", "");
+    ui.drawer.setAttribute("aria-hidden", "true");
     document.body.classList.remove("cart-open");
     closeModal();
   }
@@ -285,6 +311,7 @@ const FREE_DELIVERY_FROM = 300;
     const img = productImgSrc(buyNowItem.img);
     buy.img.src = img;
     buy.img.alt = buyNowItem.name || "";
+    buy.img.hidden = false;
     buy.name.textContent = buyNowItem.name || "";
     buy.nameAr.textContent = buyNowItem.nameAr || "";
     buy.size.textContent = buyNowItem.size || "";
@@ -402,7 +429,7 @@ const FREE_DELIVERY_FROM = 300;
         const line = (Number(it.price) || 0) * (Number(it.qty) || 0);
         return (
           '<li class="cart-item" data-cart-id="' + escapeHtml(it.id) + '">' +
-            '<img src="' + escapeHtml(productImgSrc(it.img || "")) + '" alt="">' +
+            '<img src="' + escapeHtml(productImgSrc(it.img || "")) + '" alt="' + escapeHtml(it.name || "") + '">' +
             '<div class="cart-item-info">' +
               '<p class="cart-item-name">' + escapeHtml(it.name) + '</p>' +
               '<p class="cart-item-meta"><span lang="ar" dir="rtl">' + escapeHtml(it.nameAr || "") + '</span> · <span dir="ltr">' + escapeHtml(it.size || "") + " · " + money(it.price) + "</span></p>" +
@@ -510,7 +537,7 @@ const FREE_DELIVERY_FROM = 300;
           <p class="cart-free-hint">Livraison 30 DH · offerte dès 300 DH</p>
           <p class="cart-total"><span>المجموع / Total</span> <strong class="js-total">0 DH</strong></p>
         </div>
-        <form class="checkout-form" id="checkout-form">
+        <form class="checkout-form" id="checkout-form" novalidate>
           <h3>إتمام الطلب / Commander</h3>
           <p class="pay-note">الدفع عند الاستلام · Cash on delivery</p>
           <div class="field">
@@ -583,7 +610,7 @@ const FREE_DELIVERY_FROM = 300;
           <button type="button" class="cart-close buynow-close" aria-label="Fermer">&times;</button>
         </header>
         <div class="buynow-product">
-          <img class="js-bn-img" src="" alt="">
+          <img class="js-bn-img" alt="" hidden>
           <div>
             <p class="buynow-name js-bn-name"></p>
             <p class="buynow-meta"><span class="js-bn-name-ar" lang="ar" dir="rtl"></span> · <span class="js-bn-size" dir="ltr"></span></p>
@@ -602,7 +629,7 @@ const FREE_DELIVERY_FROM = 300;
           <p class="cart-free-hint">Livraison 30 DH · offerte dès 300 DH</p>
           <p class="cart-total"><span>المجموع / Total</span> <strong class="js-bn-total">0 DH</strong></p>
         </div>
-        <form class="checkout-form" id="buynow-form">
+        <form class="checkout-form" id="buynow-form" novalidate>
           <h3>إتمام الطلب / Commander</h3>
           <p class="pay-note">الدفع عند الاستلام · Cash on delivery</p>
           <div class="field">
