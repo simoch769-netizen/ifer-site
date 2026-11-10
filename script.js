@@ -48,11 +48,12 @@ const FREE_DELIVERY_FROM = 300;
   if (form) {
     form.addEventListener("submit", (e) => {
       e.preventDefault();
-      if (success) {
-        success.hidden = false;
-        success.focus?.();
-      }
-      form.reset();
+      const fd = new FormData(form);
+      const nom = String(fd.get("nom") || "").trim();
+      const email = String(fd.get("email") || "").trim();
+      const msg = String(fd.get("message") || "").trim();
+      const text = "Salam IFER 👋\n" + (nom ? "Nom: " + nom + "\n" : "") + (email ? "Email: " + email + "\n" : "") + (msg ? "\n" + msg : "");
+      window.location.href = "https://wa.me/" + WHATSAPP_NUMBER + "?text=" + encodeURIComponent(text);
     });
   }
 
@@ -203,7 +204,7 @@ const FREE_DELIVERY_FROM = 300;
     window.__IFER_LAST_ORDER__ = message;
     if (WHATSAPP_NUMBER) {
       const url = "https://wa.me/" + WHATSAPP_NUMBER + "?text=" + encodeURIComponent(message);
-      window.open(url, "_blank", "noopener");
+      window.location.href = url;
     } else {
       showOrderModal(message);
     }
