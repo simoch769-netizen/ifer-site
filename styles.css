@@ -673,3 +673,19 @@ h3 { font-size: 1.25rem; margin: 0 0 0.25em; }
 .hero-art-wrap { background: radial-gradient(ellipse at 30% 20%, #fffaf3 0%, #fdedd5 45%, #f1c699 100%); display:flex; justify-content:center; align-items:center; padding: clamp(2.5rem,7vw,5.5rem) 1rem; }
 .hero-art { width: min(340px, 62vw) !important; }
 .brand img { width:auto; }
+
+/* Two-choice home */
+.choices { padding: clamp(1rem,4vw,2.5rem) 0 clamp(3rem,7vw,5rem); background: var(--cream); }
+.choices-grid { display:grid; grid-template-columns: 1fr 1fr; gap: clamp(1rem,3vw,2rem); }
+.choice-card { display:flex; flex-direction:column; justify-content:flex-end; gap:.4rem; min-height: 300px; padding: 2rem; border-radius: 28px; text-decoration:none; color:#fffaf3; position:relative; overflow:hidden; box-shadow: 0 18px 40px rgba(15,61,26,.18); transition: transform .35s ease, box-shadow .35s ease; }
+.choice-card:hover { transform: translateY(-6px); box-shadow: 0 26px 50px rgba(15,61,26,.26); }
+.choice-food { background: linear-gradient(160deg, rgba(15,61,26,.35), rgba(15,61,26,.92)), url('assets/product-argan.jpg') center/cover; }
+.choice-cos { background: linear-gradient(160deg, #d89d67 0%, #c8401c 100%); }
+.choice-ar { font-size: 1.4rem; font-weight:700; color:#f9dac1; }
+.choice-title { font-family: 'Playfair Display', serif; font-size: clamp(2rem,4vw,2.8rem); line-height:1.05; }
+.choice-sub { opacity:.92; }
+.choice-go { margin-top:.8rem; align-self:flex-start; background:#fffaf3; color:#0f3d1a; padding:.6rem 1.2rem; border-radius:999px; font-weight:700; }
+.back-wrap { padding-top: 1.5rem; }
+.back-link { color:#0f3d1a; font-weight:700; text-decoration:none; background:#f9dac1; padding:.5rem 1rem; border-radius:999px; display:inline-block; }
+.site-nav a.is-active { color: var(--orange, #c8401c); }
+@media (max-width: 700px) { .choices-grid { grid-template-columns: 1fr; } .choice-card { min-height: 230px; } }
